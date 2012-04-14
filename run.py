@@ -36,12 +36,11 @@ class Artist(object):
             self._similars = [ Artist(k) for (k,v) in sorted(similars, key=lambda x:x[1], reverse=True)]
         return self._similars
 
-    def tags_intersect(self, artist, match_tags=None):
+    def tags_intersect(self, artist):
         score = MATCH_TAGS
         ts = []
-        match_tags = match_tags or MATCH_TAGS #int(MATCH_TAGS*0.25)
-        for t in self.tags[:match_tags]:
-            if t in artist.tags:
+        for t in artist.tags:
+            if t in self.tags:
                 ts.append( (t, score) )
             score -= 1
         return ts
@@ -169,7 +168,7 @@ def read():
         for a in artist.similars[:5]:
             score = artist.similarity(a)
             if score>0:
-                print ' ', '%3d' % int(score*10), a.name, artist.tags_intersect(a)[:4]
+                print ' ', '%3d' % int(score*10), a.name, '[', ', '.join(dict(artist.tags_intersect(a)[:4]).keys()),']'
 
 if __name__ == '__main__':
     update_db()
