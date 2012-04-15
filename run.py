@@ -4,15 +4,22 @@ import time
 import redis
 import lastfm
 from lastfm.error import InvalidParametersError
+import config
 
 READ_NUM = 100
 MATCH_TAGS = 100
-ARTIST_FILE = './resources/frf2012.txt'
-API_KEY =''
+ARTIST_FILE = ''
 
-api = lastfm.Api(API_KEY)
+api = None
+r = None
 
-r = redis.Redis()
+def init(fes_name):
+    global api, r, ARTIST_FILE
+
+    conf = config.settings[fes_name]
+    ARTIST_FILE = conf['path']
+    api = lastfm.Api(config.api['key'])
+    r = redis.Redis(db=conf['db'])
 
 class Artist(object):
     def __init__(self, name):
@@ -168,9 +175,16 @@ def read():
         for a in artist.similars[:5]:
             score = artist.similarity(a)
             if score>0:
-                print ' ', '%3d' % int(score*10), a.name, '[', ', '.join(dict(artist.tags_intersect(a)[:4]).keys()),']'
+                print ' ', '%3d' % int(score*10), a.name, '[', ', '.join(dict(artist.tags_intersect(a)[:6]).keys()),']'
 
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv)<2:
+        print 'the key is missing'
+        print '', 'keys=', config.settings.keys()
+        sys.exit()
+
+    init(sys.argv[1])
     update_db()
     read()
 
