@@ -10,6 +10,14 @@ READ_NUM = 100
 MATCH_TAGS = 100
 ARTIST_FILE = ''
 
+KEY_LIST_ARTISTS    = 'list:artists'
+KEY_ARTIST_TAGS     = 'artist:tags:%s'
+KEY_ARTIST_SIMILARS = 'artist:similars:%s'
+KEY_ARTIST_SIMS     = 'artist:sims:%s'
+KEY_TAG_ARTISTS     = 'tag:artists:%s'
+KEY_RANK_ARTISTS    = 'rank:artists'
+KEY_RANK_TAGS       = 'rank:tags'
+
 api = None
 r = None
 
@@ -32,13 +40,13 @@ class Artist(object):
     @property
     def tags(self):
         if not hasattr(self, '_tags'):
-            self._tags = r.lrange('artist:tags:%s' % self._name, 0, MATCH_TAGS)
+            self._tags = r.lrange(KEY_ARTIST_TAGS % self._name, 0, MATCH_TAGS)
         return self._tags
 
     @property
     def similars(self):
         if not hasattr(self, '_similars'):
-            similars = [ (name,score) for (name,score) in r.zrevrange('artist:similars:%s' % self._name, 0, MATCH_TAGS, withscores=True)]
+            similars = [ (name,score) for (name,score) in r.zrevrange(KEY_ARTIST_SIMILARS % self._name, 0, MATCH_TAGS, withscores=True)]
             similars = sorted(similars, key=lambda x:x[1], reverse=True)
             self._similars = [ Artist(k) for (k,v) in sorted(similars, key=lambda x:x[1], reverse=True)]
         return self._similars
@@ -69,7 +77,7 @@ def make_similar_artist(name, targets):
         if len(same_tags)>0:
             score = gen_tag_score(same_tags)
             l.append( (n, same_tags) )
-        r.zincrby('rank:artists', name, amount=int(score))
+        r.zincrby(KEY_RANK_ARTISTS, name, amount=int(score))
     return l
 
 def load_artist_info(name):
@@ -77,19 +85,19 @@ def load_artist_info(name):
         artist = api.get_artist(artist=name.decode('utf-8'))
         if not artist:
             return
-        r.rpush('list:artists', artist.name)
+        r.rpush(KEY_LIST_ARTISTS, artist.name)
         tags = [ tag.name.lower() for tag in artist.top_tags ]
         similars =  [ s.name.encode('utf-8') for s in artist.similar ]
 
         with r.pipeline() as pipe:
             for n in similars:
-                pipe.rpush('artist:sims:%s' % artist.name, n)
+                pipe.rpush(KEY_ARTIST_SIMS % artist.name, n)
             pipe.execute() 
 
             for tag in tags:
-                pipe.zincrby('rank:tags', tag, 1)
-                pipe.sadd('tag:artists:%s' % tag, artist.name)
-                pipe.rpush('artist:tags:%s' % artist.name, tag)
+                pipe.zincrby(KEY_RANK_TAGS, tag, 1)
+                pipe.sadd(KEY_TAG_ARTISTS % tag, artist.name)
+                pipe.rpush(KEY_ARTIST_TAGS % artist.name, tag)
                 pipe.execute()
     except lastfm.error.InvalidParametersError, e:
         print e
@@ -105,8 +113,8 @@ def get_artists():
     return artists
 
 def make_similars():
-    r.delete('rank:artists')
-    r.delete('artist:similars:*')
+    r.delete(KEY_RANK_ARTISTS)
+    r.delete(KEY_ARTIST_SIMILARS % '*')
 
     artists = get_artist_list()
     for artist_name in artists:
@@ -114,18 +122,15 @@ def make_similars():
         similars = make_similar_artist(artist_name, anothers)
         with r.pipeline() as pipe:
             for (name_,same_tags) in similars:
-                pipe.zadd('artist:similars:%s' % artist_name, name_, gen_tag_score(same_tags))
+                pipe.zadd(KEY_ARTIST_SIMILARS % artist_name, name_, gen_tag_score(same_tags))
             pipe.execute()
 
-def tag_score(tag):
-    return r.zscore('tag:rank', tag) or 0
-
 def get_sims(artist):
-    return r.lrange('artist:sims:%s' % artist, 0, -1)
+    return r.lrange(KEY_ARTIST_SIMS % artist, 0, -1)
 
 def get_same_tags(a, b):
-    a_tag = r.lrange('artist:tags:%s' % a, 1, MATCH_TAGS)
-    b_tag = r.lrange('artist:tags:%s' % b, 1, MATCH_TAGS)
+    a_tag = r.lrange(KEY_ARTIST_TAGS % a, 1, MATCH_TAGS)
+    b_tag = r.lrange(KEY_ARTIST_TAGS % b, 1, MATCH_TAGS)
     score = MATCH_TAGS
     same_tags = []
     for t in a_tag:
@@ -135,22 +140,22 @@ def get_same_tags(a, b):
     return same_tags
 
 def get_artist_tags(artist):
-    return r.lrange('artist:tags:%s' % artist, 0, -1)
+    return r.lrange(KEY_ARTIST_TAGS % artist, 0, -1)
 
 def get_similar_artists(name):
-    return r.zrevrange('artist:similars:%s' % name, 0, -1, withscores=True)
+    return r.zrevrange(KEY_ARTIST_SIMILARS % name, 0, -1, withscores=True)
 
 def get_top_tags():
-    return r.zrevrange('rank:tags', 0, 30, withscores=True)
+    return r.zrevrange(KEY_RANK_TAGS, 0, 30, withscores=True)
 
 def get_top_artists():
-    return r.zrevrange('rank:artists', 0, 30, withscores=True)
+    return r.zrevrange(KEY_RANK_ARTISTS, 0, 30, withscores=True)
 
 def get_similar_artists_in(name, artist_names):
     return [ s for s in get_sims(name) if s.upper() in artist_names ]
 
 def get_artist_list():
-    return r.lrange('list:artists', 0, -1)
+    return r.lrange(KEY_LIST_ARTISTS, 0, -1)
 
 def update_db():
     r.flushdb()
