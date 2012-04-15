@@ -2,14 +2,20 @@
     pip install redis
     pip install https://github.com/jc/python-lastfm/zipball/master
 
-## set api key
+## edit config.py
 
 * Get api key from [http://www.lastfm.jp/api/account]
-* Edit run.py
-    API_KEY = 'YOUR API KEY'
+* edit config.py
+
+    api : {
+        'key' : 'YOUR API KEY'
+    }
+
+## show usage
+    python ./run.py -h
 
 ## run
-    python ./run.py
+    python ./run.py <key>
 
 ## data in Redis
 
