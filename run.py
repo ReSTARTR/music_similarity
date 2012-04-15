@@ -176,12 +176,16 @@ def read():
             score = artist.similarity(a)
             if score>0:
                 print ' ', '%3d' % int(score*10), a.name, '[', ', '.join(dict(artist.tags_intersect(a)[:6]).keys()),']'
+def usage():
+    print 'usage: python ./run.py <key>'
+    print 'the key is following'
+    for k in config.settings.keys():
+        print ' -', k, '\t:', config.settings[k]['desc']
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv)<2:
-        print 'the key is missing'
-        print '', 'keys=', config.settings.keys()
+    if len(sys.argv)<2 or sys.argv[1] in ['-h','--help']:
+        usage()
         sys.exit()
 
     init(sys.argv[1])
