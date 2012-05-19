@@ -26,6 +26,11 @@ settings={
         'path': './resources/rsr2012.txt',
         'db'  : 4,
     },
+    'rij2012': {
+        'desc': 'Rock in Japan 2012',
+        'path': './resources/rockinjapan2012.txt',
+        'db'  : 5,
+    },
 }
 
 api = {
