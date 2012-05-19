@@ -100,7 +100,7 @@ def load_artist_info(name):
                 pipe.rpush(KEY_ARTIST_TAGS % artist.name, tag)
                 pipe.execute()
     except lastfm.error.InvalidParametersError, e:
-        print e
+        print name, ':', e
     finally:
         time.sleep(0.2)
 
