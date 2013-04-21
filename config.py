@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 settings={
+    # 2012
     'frf2012': {
         'desc': 'FUJIROCK FESTIVAL \'12',
         'path':'./resources/frf2012.txt',
@@ -30,6 +31,12 @@ settings={
         'desc': 'Rock in Japan 2012',
         'path': './resources/rockinjapan2012.txt',
         'db'  : 5,
+    },
+    # 2013
+    'frf2013': {
+        'desc': 'FUJIROCK FESTIVAL \'13',
+        'path':'./resources/frf2013.txt',
+        'db'  : 6,
     },
 }
 
