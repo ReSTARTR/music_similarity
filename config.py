@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
 settings={
+    'testfes': {
+        'desc': 'TEST FESTIVAL',
+        'path':'./resources/testfes.txt',
+        'db'  : 15,
+    },
     # 2012
     'frf2012': {
         'desc': 'FUJIROCK FESTIVAL \'12',
