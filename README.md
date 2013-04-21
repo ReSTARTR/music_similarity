@@ -14,7 +14,10 @@
 ## show usage
     python ./run.py -h
 
-## run
+## run(update db)
+    python ./run.py <key> -u
+
+## run(read only)
     python ./run.py <key>
 
 ## data in Redis

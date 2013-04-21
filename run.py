@@ -17,5 +17,6 @@ if __name__ == '__main__':
     from music_similarity import init, update_db, read
 
     init(sys.argv[1])
-    update_db()
+    if len(sys.argv) > 2 and sys.argv[2] == '-u':
+        update_db()
     read()
