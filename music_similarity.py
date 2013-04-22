@@ -67,7 +67,6 @@ class Artist(object):
 def gen_tag_score(tags):
     x = sum([ e[1] for e in tags])
     y = float(sum(range(MATCH_TAGS)))
-    print '(', x, '/', y, ') * 100'
     return ( x / y ) * 100
 
 def make_similar_artist(name, targets):
